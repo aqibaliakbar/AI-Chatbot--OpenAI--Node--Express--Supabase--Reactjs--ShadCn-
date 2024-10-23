@@ -1,42 +1,43 @@
-import React from "react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useAI } from "../hooks/useAI";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { useChatSessions } from "../contexts/ChatSessionsContext";
-
-const personalities = [
-  { id: "analyst", name: "Data Analyst" },
-  { id: "teacher", name: "Teacher" },
-  { id: "creative", name: "Creative Writer" },
-  { id: "coder", name: "Programmer" },
-];
+import { useAI } from "../hooks/useAI";
 
 export const PersonalitySelector = () => {
-  const { setCurrentPersonality, currentPersonality } = useAI();
-  const { currentSession, setSessionPersonality } = useChatSessions();
+  const { currentSession, updateSessionPersonality } = useChatSessions();
+  const { setCurrentPersonality } = useAI();
 
-  const handlePersonalityChange = (personalityId) => {
-    setCurrentPersonality(personalityId);
+  const handlePersonalityChange = (value) => {
     if (currentSession) {
-      setSessionPersonality(currentSession.id, personalityId);
+      console.log(`Changing personality to: ${value}`);
+      updateSessionPersonality(currentSession.id, value);
+      setCurrentPersonality(value);
     }
   };
 
   return (
-    <ToggleGroup
-      type="single"
-      value={currentPersonality}
-      onValueChange={handlePersonalityChange}
-      className="flex flex-wrap justify-center gap-2"
-    >
-      {personalities.map((personality) => (
-        <ToggleGroupItem
-          key={personality.id}
-          value={personality.id}
-          className="px-3 py-2 text-sm"
-        >
-          {personality.name}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
+    <div className="flex items-center space-x-2">
+      <span className="text-sm text-muted-foreground">AI Personality:</span>
+      <Select
+        value={currentSession?.personality || "default"}
+        onValueChange={handlePersonalityChange}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Select personality" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="default">Default Assistant</SelectItem>
+          <SelectItem value="analyst">Data Analyst</SelectItem>
+          <SelectItem value="teacher">Teacher</SelectItem>
+          <SelectItem value="creative">Creative Writer</SelectItem>
+          <SelectItem value="coder">Programmer</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 };

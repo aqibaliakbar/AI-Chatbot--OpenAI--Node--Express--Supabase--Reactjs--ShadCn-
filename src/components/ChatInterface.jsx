@@ -23,59 +23,75 @@ import { PersonalitySelector } from "./PersonalitySelector";
 import { FileUpload } from "./FileUpload";
 import { VoiceInterface } from "./VoiceInterface";
 
-
-const ChatInterface = () => {
+const ChatInterface = ({ onSwitchToFileAnalysis }) => {
   const [input, setInput] = useState("");
   const { currentSession, updateSession, generateSessionName } =
     useChatSessions();
   const { sendMessage, isLoading, error } = useAI();
   const scrollAreaRef = useRef(null);
   const [partialResponse, setPartialResponse] = useState("");
-  const isFirstMessage = useRef(true);
+  const isFirstMessageRef = useRef(true);
+  const messageEndRef = useRef(null);
 
   useEffect(() => {
-    scrollAreaRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [currentSession?.messages, partialResponse]);
+
+  useEffect(() => {
+    if (currentSession?.messages.length === 0) {
+      isFirstMessageRef.current = true;
+    }
+  }, [currentSession]);
+
+  const isFirstMessage = useRef(true);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim() || !currentSession) return;
+    if (!input.trim() || !currentSession || isLoading) return;
 
     const userMessage = { role: "user", content: input };
-    const updatedMessages = [...currentSession.messages, userMessage];
-    updateSession(currentSession.id, updatedMessages);
-    setInput("");
-    setPartialResponse("");
 
     try {
-      const aiResponse = await sendMessage(
-        input,
-        (partialResponse) => {
-          console.log("Received partial response:", partialResponse);
-          setPartialResponse(partialResponse);
-        },
-        currentSession.personality
-      );
+      // First update messages with user input
+      const updatedMessages = [...currentSession.messages, userMessage];
+      await updateSession(currentSession.id, updatedMessages);
 
-      console.log("Full AI response received:", aiResponse);
+      // Clear input and partial response
+      setInput("");
+      setPartialResponse("");
 
+      // Get AI response
+       const aiResponse = await sendMessage(
+         input,
+         (partialResponse) => {
+           console.log("Received partial response:", partialResponse);
+           setPartialResponse(partialResponse);
+         },
+         currentSession.personality,
+         currentSession.messages // Pass previous messages for context
+       );
+
+      // Update messages with AI response
       const newMessages = [
         ...updatedMessages,
         { role: "assistant", content: aiResponse },
       ];
-      updateSession(currentSession.id, newMessages);
+      await updateSession(currentSession.id, newMessages);
       setPartialResponse("");
 
-      // Generate session name after the first AI response
-    if (isFirstMessage.current) {
-      console.log("Attempting to generate session name...");
-      await generateSessionName(currentSession.id);
-      isFirstMessage.current = false;
-    }
+      // Handle session naming for first message
+      if (isFirstMessage.current) {
+        isFirstMessage.current = false;
+        // Generate name based on the user's message
+        await generateSessionName(currentSession.id, userMessage.content);
+      }
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error in handleSendMessage:", error);
       updateSession(currentSession.id, [
-        ...updatedMessages,
+        ...currentSession.messages,
+        userMessage,
         {
           role: "error",
           content:
@@ -83,6 +99,31 @@ const ChatInterface = () => {
         },
       ]);
     }
+  };
+
+
+
+  // Reset first message flag when switching sessions
+  useEffect(() => {
+    if (currentSession?.messages.length === 0) {
+      isFirstMessage.current = true;
+    }
+  }, [currentSession]);
+
+  // Reset first message flag when switching sessions
+  useEffect(() => {
+    if (currentSession?.messages.length === 0) {
+      isFirstMessage.current = true;
+    }
+  }, [currentSession]);
+
+  const handleFileProcessed = (summary) => {
+    updateSession(currentSession.id, [
+      ...currentSession.messages,
+      { role: "system", content: "File uploaded and analyzed." },
+      { role: "assistant", content: summary },
+    ]);
+    onSwitchToFileAnalysis(summary);
   };
 
   const renderers = {
@@ -108,27 +149,17 @@ const ChatInterface = () => {
   };
 
   if (!currentSession) {
-    return <div>Initializing chat session...</div>;
+    return <div>Loading chat session...</div>;
   }
 
-  console.log("Current session messages:", currentSession.messages);
-
   return (
-    <Card className="w-full h-[calc(100vh-6rem)] max-w-5xl mx-auto flex flex-col">
+    <Card className="w-full h-[calc(100vh-11rem)] max-w-5xl mx-auto flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle>InsightBot: Your AI Assistant</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col space-y-4 overflow-hidden">
         <PersonalitySelector />
-        <FileUpload
-          onFileProcessed={(summary) => {
-            updateSession(currentSession.id, [
-              ...currentSession.messages,
-              { role: "system", content: "File uploaded and analyzed." },
-              { role: "assistant", content: summary },
-            ]);
-          }}
-        />
+        <FileUpload onFileProcessed={handleFileProcessed} />
         <VoiceInterface
           onSpeechRecognized={setInput}
           onTextToSpeech={(speakFunction) => {
@@ -162,7 +193,9 @@ const ChatInterface = () => {
                 </Avatar>
                 <div
                   className={`mx-2 p-3 rounded-lg ${
-                    message.role === "user" ? "bg-primary text-secondary" : "bg-accent"
+                    message.role === "user"
+                      ? "bg-primary text-secondary"
+                      : "bg-accent"
                   } overflow-hidden`}
                 >
                   {message.role === "user" ? (
@@ -187,7 +220,7 @@ const ChatInterface = () => {
                 <Avatar className="bg-red-800 w-8 h-8 text-white flex items-center justify-center">
                   AI
                 </Avatar>
-                <div className="mx-2 p-3 rounded-lg bg-green-100 overflow-hidden">
+                <div className="mx-2 p-3 rounded-lg bg-accent overflow-hidden">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkMath]}
                     rehypePlugins={[rehypeKatex]}
@@ -200,7 +233,7 @@ const ChatInterface = () => {
               </div>
             </div>
           )}
-          <div ref={scrollAreaRef} />
+          <div ref={messageEndRef} />
         </ScrollArea>
       </CardContent>
       <CardFooter>
@@ -210,9 +243,10 @@ const ChatInterface = () => {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-grow"
+            disabled={isLoading}
           />
           <Button type="submit" disabled={isLoading}>
-            Send
+            {isLoading ? "Sending..." : "Send"}
           </Button>
         </form>
       </CardFooter>

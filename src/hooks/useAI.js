@@ -18,25 +18,29 @@ export const useAI = () => {
   const [currentPersonality, setCurrentPersonality] = useState("default");
 
   const sendMessage = useCallback(
-    async (message, onPartialResponse, personality = currentPersonality) => {
+    async (message, onPartialResponse, personality = currentPersonality, previousMessages = []) => {
       setIsLoading(true);
       setError(null);
       let fullResponse = "";
 
       try {
-        const personalityPrompt =
-          personalityPrompts[personality] || personalityPrompts.default;
+        const personalityPrompt = personalityPrompts[personality] || personalityPrompts.default;
+        
+        // Combine previous messages with the new message
+        const messages = [
+          { role: "system", content: personalityPrompt },
+          ...previousMessages,
+          { role: "user", content: message }
+        ];
+
+        console.log("Sending message with context:", messages);
+
         const response = await fetch("http://localhost:5000/api/chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            messages: [
-              { role: "system", content: personalityPrompt },
-              { role: "user", content: message },
-            ],
-          }),
+          body: JSON.stringify({ messages }),
         });
 
         if (!response.ok) {

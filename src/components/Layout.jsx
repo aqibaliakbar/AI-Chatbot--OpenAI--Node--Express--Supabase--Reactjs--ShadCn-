@@ -6,7 +6,7 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col">
         <header className="border-b">
           <div className="container flex items-center justify-between py-2">
             <h1 className="text-xl font-bold">InsightBot</h1>
