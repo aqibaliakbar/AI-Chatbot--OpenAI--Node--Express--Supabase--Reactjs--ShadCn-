@@ -197,7 +197,7 @@ const FileAnalysisInterface = ({ initialSummary, onReturn }) => {
   };
 
   return (
-    <Card className="w-full h-[calc(100vh-4rem)] max-w-5xl mx-auto flex flex-col">
+    <Card className="w-full h-[calc(100vh-12rem)] max-w-5xl mx-auto flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle>File Analysis</CardTitle>

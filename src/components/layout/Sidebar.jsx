@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useChatSessions } from "../contexts/ChatSessionsContext";
+import { useChatSessions } from "@/contexts/ChatSessionsContext";
+
 
 const Sidebar = () => {
   const {
