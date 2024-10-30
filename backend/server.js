@@ -156,53 +156,28 @@ app.post("/api/process-file", upload.single("file"), async (req, res) => {
 });
 
 
-app.post("/api/generate-summary", async (req, res) => {
-  const { messages } = req.body;
-  if (!messages || messages.length === 0) {
-    return res.status(400).json({ error: "No messages provided" });
-  }
 
-  try {
-    const response = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a helpful assistant that generates concise summaries of conversations.",
-          },
-          {
-            role: "user",
-            content: `Please provide a concise summary of the following conversation:\n\n${messages
-              .map((m) => `${m.role}: ${m.content}`)
-              .join("\n")}`,
-          },
-        ],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-      }
-    );
-
-    const summary = response.data.choices[0].message.content;
-    res.json({ summary });
-  } catch (error) {
-    console.error("Error generating summary:", error);
-    res.status(500).json({ error: "Error generating summary" });
-  }
-});
 app.post("/api/analyze-file", async (req, res) => {
-  const { summary, query } = req.body;
+  const { summary, query, messages } = req.body;
   if (!summary || !query) {
     return res.status(400).json({ error: "Summary and query are required" });
   }
 
   try {
+    // Get all document summaries from the messages
+    const additionalDocs =
+      messages
+        ?.filter((msg) => msg.role === "system" && msg.isAdditionalFile)
+        ?.map((msg) => msg.content) || [];
+
+    // Combine all documents into context
+    const fullContext = [
+      `Main Document:\n${summary}`,
+      ...additionalDocs.map(
+        (doc, index) => `Additional Document ${index + 1}:\n${doc}`
+      ),
+    ].join("\n\n");
+
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -211,11 +186,11 @@ app.post("/api/analyze-file", async (req, res) => {
           {
             role: "system",
             content:
-              "You are an AI assistant that analyzes documents and provides insights based on user queries. Use the provided summary as context for answering questions or following instructions. Respond using Markdown formatting for better readability.",
+              "You are an AI assistant that analyzes documents and provides insights based on user queries. Analyze all provided documents and their relationships to provide comprehensive answers. Use the provided summaries as context for answering questions or following instructions. Respond using Markdown formatting for better readability.",
           },
           {
             role: "user",
-            content: `Document summary:\n${summary}\n\nUser query: ${query}`,
+            content: `Document Context:\n${fullContext}\n\nUser query: ${query}`,
           },
         ],
         stream: true,
@@ -229,6 +204,7 @@ app.post("/api/analyze-file", async (req, res) => {
       }
     );
 
+    // Rest of the streaming response handling remains the same
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",

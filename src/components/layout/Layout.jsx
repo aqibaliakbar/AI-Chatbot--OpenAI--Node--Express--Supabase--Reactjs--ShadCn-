@@ -11,6 +11,8 @@ import AuthButton from "../auth/AuthButton/AuthButton";
 import ParticleBackground from "../ParticleBackground";
 import { SignIn } from "../auth/Signin/Signin";
 import Sidebar from "./Sidebar";
+import { Link } from "react-router-dom";
+import { FuturisticLogo } from "../FuturicticLogo";
 
 const LoadingScreen = () => (
   <div className="relative flex items-center justify-center min-h-screen bg-background">
@@ -43,7 +45,7 @@ const Layout = ({ children }) => {
   }
 
   return (
-    <div className="relative min-h-screen h-[98vh] bg-background text-foreground flex overflow-hidden">
+    <div className="relative min-h-screen h-[97vh] bg-background text-foreground flex overflow-hidden">
       <ParticleBackground
         count={30}
         minOpacity={0.1}
@@ -59,18 +61,8 @@ const Layout = ({ children }) => {
             animate={{ y: 0, opacity: 1 }}
             className="border-b backdrop-blur-sm bg-background/80 sticky top-0 z-50"
           >
-            <div className="container flex items-center justify-between py-4">
-              <div className="flex items-center space-x-3">
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <Bot className="h-6 w-6 text-primary" />
-                </motion.div>
-                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-foreground">
-                  InsightBot
-                </h1>
-              </div>
+            <div className="max-w-[97rem] mx-auto flex items-center justify-between py-4 px-6">
+              <FuturisticLogo />
               <div className="flex items-center space-x-4">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -82,9 +74,7 @@ const Layout = ({ children }) => {
               </div>
             </div>
           </motion.header>
-          <main className="flex-1 overflow-hidden relative mt-4 ">
-            {children}
-          </main>
+          <main className="flex-1 overflow-hidden relative  ">{children}</main>
         </div>
       </div>
     </div>

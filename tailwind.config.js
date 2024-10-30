@@ -65,10 +65,48 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+        floatRandom: {
+          "0%, 100%": {
+            transform: "translate(0, 0) scale(1) rotate(0deg)",
+            opacity: 0,
+          },
+          "50%": {
+            transform: "translate(10px, -10px) scale(1.5) rotate(180deg)",
+            opacity: 1,
+          },
+        },
+        gradient: {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        scanner: {
+          "0%": { transform: "translateY(-50vh)" },
+          "50%": { transform: "translateY(50vh)" },
+          "100%": { transform: "translateY(-50vh)" },
+          "0%, 100%": { transform: "translateX(-100%)" },
+          "51%": { transform: "translateX(200%)" },
+        },
+        gridMove: {
+          "0%": { backgroundPosition: "0 0" },
+          "100%": { backgroundPosition: "0 40px" },
+        },
+      },
+      backgroundImage: {
+        "grid-dots":
+          "radial-gradient(circle at center, var(--tw-colors-primary-500/15) 1px, transparent 1px)",
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float-random": "floatRandom 5s ease-in-out infinite",
+        scanner: "scanner 4s ease-in-out infinite",
+        "grid-move": "gridMove 20s linear infinite",
+        "gradient-shift": "gradient 3s ease infinite",
+        "gradient-shift-reverse": "gradient 3s ease infinite reverse",
       },
     },
   },

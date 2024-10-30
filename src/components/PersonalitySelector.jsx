@@ -35,7 +35,7 @@ export const PersonalitySelector = () => {
           <SelectItem value="analyst">Data Analyst</SelectItem>
           <SelectItem value="teacher">Teacher</SelectItem>
           <SelectItem value="creative">Creative Writer</SelectItem>
-          <SelectItem value="coder">Programmer</SelectItem>
+          <SelectItem value="programmer">Programmer</SelectItem>
         </SelectContent>
       </Select>
     </div>

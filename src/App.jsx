@@ -10,6 +10,9 @@ import { GuestRoute } from "./components/auth/GuestRoute/GuestRoute";
 import { SignIn } from "./components/auth/Signin/Signin";
 import { SignUp } from "./components/auth/Signup/Signup";
 import AuthCallback from "./components/auth/AuthCallBack/AuthCallback";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import Layout from "./components/layout/Layout";
+
 
 
 function App() {
@@ -44,6 +47,8 @@ function App() {
 
               {/* Auth callback route */}
               <Route path="/auth/callback" element={<AuthCallback />} />
+
+    
 
               {/* Catch all route - redirect to root */}
               <Route path="*" element={<Navigate to="/" replace />} />
